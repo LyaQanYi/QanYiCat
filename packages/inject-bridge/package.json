@@ -1,0 +1,38 @@
+{
+  "name": "@qanyicat/inject-bridge",
+  "version": "0.0.1",
+  "description": "Boot the @qanyicat/onebot OneBotManager from inside QQ.exe with a live wrapper.node session",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@qanyicat/core": "workspace:*",
+    "@qanyicat/onebot": "workspace:*",
+    "@qanyicat/protocol": "workspace:*",
+    "@qanyicat/webui-backend": "workspace:*",
+    "ffmpeg-static": "^5.3.0",
+    "silk-wasm": "^3.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:",
+    "vitest": "catalog:"
+  }
+}

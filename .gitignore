@@ -16,3 +16,16 @@ coverage/
 .cache/
 .turbo/
 .pnpm-store/
+
+# Runtime state files persisted by the bridge per quick-start.bat env
+qanyicat.webui.passkey.json
+qanyicat.media-index.json
+qanyicat.uid-uin-cache.json
+
+# Local / dev runtime configs — copy qanyicat.example.config.json as a template
+qanyicat.config.json
+qanyicat.webui.config.json
+qanyicat.dual-stack.config.json
+
+# Design-stage assets (HTML/JSX mockups + design transcript) — not shipped
+tools/design-spec/

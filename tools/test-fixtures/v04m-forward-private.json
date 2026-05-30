@@ -1,0 +1,6 @@
+﻿{
+  "user_id": "10000",
+  "messages": [
+    { "type": "node", "data": { "id": "REPLACE_ME_WITH_MESSAGE_ID" } }
+  ]
+}

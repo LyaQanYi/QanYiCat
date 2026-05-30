@@ -1,0 +1,46 @@
+{
+  "name": "@qanyicat/webui-backend",
+  "version": "0.0.1",
+  "description": "WebUI HTTP/WS backend (hono)",
+  "private": true,
+  "type": "module",
+  "main": "./dist/backend/src/server.js",
+  "types": "./src/server.ts",
+  "exports": {
+    ".": {
+      "types": "./src/server.ts",
+      "import": "./dist/backend/src/server.js",
+      "default": "./dist/backend/src/server.js"
+    }
+  },
+  "publishConfig": {
+    "main": "./dist/backend/src/server.js",
+    "types": "./dist/backend/src/server.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/backend/src/server.d.ts",
+        "import": "./dist/backend/src/server.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@qanyicat/core": "workspace:*",
+    "@qanyicat/protocol": "workspace:*",
+    "@hono/node-server": "catalog:",
+    "hono": "catalog:",
+    "ws": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/ws": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

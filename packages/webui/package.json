@@ -1,0 +1,12 @@
+{
+  "name": "@qanyicat/webui",
+  "version": "0.0.1",
+  "description": "WebUI management panel (frontend + backend)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm --filter @qanyicat/webui-frontend run build && pnpm --filter @qanyicat/webui-backend run build",
+    "dev": "pnpm --filter @qanyicat/webui-frontend run dev",
+    "typecheck": "echo 'see @qanyicat/webui-frontend and @qanyicat/webui-backend'"
+  }
+}
