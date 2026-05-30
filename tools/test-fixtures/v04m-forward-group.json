@@ -1,0 +1,7 @@
+﻿{
+  "group_id": "100001",
+  "messages": [
+    { "type": "node", "data": { "id": "REPLACE_ME_WITH_MESSAGE_ID_1" } },
+    { "type": "node", "data": { "id": "REPLACE_ME_WITH_MESSAGE_ID_2" } }
+  ]
+}

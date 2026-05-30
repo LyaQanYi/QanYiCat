@@ -1,0 +1,7 @@
+[toolchain]
+# retour 0.3 uses unstable `tuple_trait` and `unboxed_closures` features.
+# Pinned per-workspace so other Rust projects on this machine keep their
+# stable toolchain.
+channel = "nightly-2026-05-15"
+profile = "minimal"
+targets = ["x86_64-pc-windows-gnu"]

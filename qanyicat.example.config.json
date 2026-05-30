@@ -1,0 +1,27 @@
+{
+  "qq": {},
+  "log": {
+    "level": "info",
+    "toFile": false
+  },
+  "onebot": {
+    "enable11": true,
+    "enable12": false,
+    "networks": [
+      {
+        "kind": "ws-server",
+        "id": "default-ws",
+        "host": "127.0.0.1",
+        "port": 5700
+      }
+    ]
+  },
+  "webui": {
+    "enable": false,
+    "port": 5099
+  },
+  "process": {
+    "multi": false,
+    "restartOnCrash": false
+  }
+}

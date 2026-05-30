@@ -1,0 +1,29 @@
+﻿{
+  "user_id": "10001",
+  "messages": [
+    {
+      "type": "node",
+      "data": {
+        "user_id": "10001",
+        "nickname": "假装的小红",
+        "content": "嗨，今晚一起吃饭吗？"
+      }
+    },
+    {
+      "type": "node",
+      "data": {
+        "user_id": "10002",
+        "nickname": "假装的小明",
+        "content": "好啊，七点见～"
+      }
+    },
+    {
+      "type": "node",
+      "data": {
+        "user_id": "10001",
+        "nickname": "假装的小红",
+        "content": "[CQ:face,id=178] 那就这么定了！"
+      }
+    }
+  ]
+}

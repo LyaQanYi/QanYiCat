@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: js (typecheck / test / build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.22.0
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # --ignore-scripts: skip ffmpeg-static's postinstall binary download.
+      # That binary is only used inside QQ.exe for silk transcoding (live smoke
+      # path); JS tests and builds don't need it, and the upstream CDN is flaky
+      # enough that download failures would mask real regressions. The vite
+      # configs already externalize ffmpeg-static so builds work without it.
+      - name: pnpm install
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: pnpm typecheck
+        run: pnpm typecheck
+
+      - name: pnpm test
+        run: pnpm test
+
+      - name: pnpm build
+        run: pnpm build
+
+  rust:
+    name: rust (injector test + build)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: tools/qanyicat-injector
+    steps:
+      - uses: actions/checkout@v4
+
+      # rust-toolchain.toml in tools/qanyicat-injector pins nightly-2026-05-15
+      # + x86_64-pc-windows-gnu target. rustup picks both up on first cargo run.
+      # MSYS2 ships with windows-latest at C:\msys64; mingw64 gcc satisfies the
+      # gnu target's linker. We don't hit the Chinese-path dlltool issue on CI
+      # because the runner workspace is plain ASCII (D:\a\QanYiCat\...).
+      - name: Add MinGW to PATH
+        shell: pwsh
+        run: |
+          $mingw = 'C:\msys64\mingw64\bin'
+          if (-not (Test-Path $mingw)) { throw "MinGW not found at $mingw" }
+          Add-Content $env:GITHUB_PATH $mingw
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/qanyicat-injector
+
+      - name: cargo test (release)
+        run: cargo test --release
+
+      - name: cargo build (release)
+        run: cargo build --release
+
+      - name: Upload injector binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: injector-binaries-${{ github.sha }}
+          path: |
+            tools/qanyicat-injector/target/release/qanyicat-launcher.exe
+            tools/qanyicat-injector/target/release/qanyicat_hook.dll
+          if-no-files-found: error
+          retention-days: 14
