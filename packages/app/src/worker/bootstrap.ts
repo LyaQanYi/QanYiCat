@@ -88,8 +88,22 @@ export async function runWorker(): Promise<void> {
         await onebot.start();
         activeOnebotCfg = next;
       } catch (e) {
-        onebot = new OneBotManager(ctx, activeOnebotCfg);
-        await onebot.start();
+        // New config failed to come up; restore the last-good config so the bot
+        // stays online.
+        try {
+          onebot = new OneBotManager(ctx, activeOnebotCfg);
+          await onebot.start();
+        } catch (rollbackErr) {
+          // Both the new config and the rollback failed — the bot is now down.
+          // Keep the root cause (why the reload was rejected) front and center
+          // in the message so the operator isn't misled by only the rollback
+          // error; attach it as `cause` for programmatic inspection too.
+          throw new Error(
+            `config reload failed (${(e as Error).message}); rollback to the ` +
+              `previous config also failed (${(rollbackErr as Error).message})`,
+            { cause: e }
+          );
+        }
         throw e;
       }
     };
