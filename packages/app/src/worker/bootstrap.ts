@@ -47,7 +47,9 @@ export async function runWorker(): Promise<void> {
     await ctx.dispose();
   });
 
-  const onebot = new OneBotManager(ctx, config.onebot);
+  // `let` because onConfigUpdate (wired below) swaps in a freshly-configured
+  // manager on hot-reload; the shutdown hook reads this binding at call time.
+  let onebot = new OneBotManager(ctx, config.onebot);
   await onebot.start();
   registerShutdownHook(async () => {
     await onebot.stop();
@@ -66,6 +68,19 @@ export async function runWorker(): Promise<void> {
     };
     if (config.webui.jwtSecret !== undefined) opts.jwtSecret = config.webui.jwtSecret;
     if (config.webui.password !== undefined) opts.webuiPassword = config.webui.password;
+    // Wire the WebUI's live-control callbacks to the running manager so the
+    // network-config hot-reload and the "接口调试" page actually take effect.
+    // (onListMedia is intentionally omitted: media interception lives in the
+    // injected bridge, so this worker process has no MediaIndex to expose.)
+    opts.onActionInvoke = (action, params, protocol) =>
+      onebot.invokeAction(action, params, protocol ?? 'v11');
+    opts.onConfigUpdate = async (next) => {
+      // No in-place reconfigure on the manager, and adapters rebind the same
+      // ports, so we must stop the old set before starting the new one.
+      await onebot.stop();
+      onebot = new OneBotManager(ctx, next);
+      await onebot.start();
+    };
     const ui = await mod.initWebUI(opts);
     registerShutdownHook(async () => {
       await ui.close();
