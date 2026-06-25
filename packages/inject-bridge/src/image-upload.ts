@@ -60,8 +60,16 @@ function md5File(path: string): Promise<string> {
 /** Strip a `file://` prefix and decode the URL, so callers can pass either form. */
 function normalizePath(input: string): string {
   if (input.startsWith('file:///')) {
-    try { return decodeURIComponent(new URL(input).pathname.replace(/^\//, '')); }
-    catch { /* fallthrough */ }
+    try {
+      const pathname = new URL(input).pathname;
+      // file:/// puts the path after the leading slash. On Windows that's
+      // "/C:/dir/file" and the slash must go to get "C:/dir/file"; on POSIX the
+      // leading slash is the actual root ("/home/x"), so only strip it for a
+      // drive-letter path. (Dropping it unconditionally broke absolute paths on
+      // Linux — harmless on the Windows target today, but a Linux-port trap.)
+      const stripped = /^\/[A-Za-z]:/.test(pathname) ? pathname.slice(1) : pathname;
+      return decodeURIComponent(stripped);
+    } catch { /* fallthrough */ }
   }
   return input;
 }
