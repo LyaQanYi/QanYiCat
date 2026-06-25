@@ -235,9 +235,8 @@ export async function stageImageForSend(
     const fileSize = statSync(filePath).size;
     if (fileSize === 0) throw new Error(`image file is empty: ${filePath}`);
 
-    step = 'readFile';
-    const fileBuf = await fs.readFile(filePath);
-    const md5HexStr = createHash('md5').update(fileBuf).digest('hex');
+    step = 'md5';
+    const md5HexStr = await md5File(filePath);
     const fileName = basename(filePath);
     step = 'probeImageDimensions';
     const { w, h } = await probeImageDimensions(filePath);
@@ -308,9 +307,8 @@ export async function stageFileForSend(
     const fileSize = statSync(filePath).size;
     if (fileSize === 0) throw new Error(`file is empty: ${filePath}`);
 
-    step = 'readFile';
-    const buf = await fs.readFile(filePath);
-    const fileMd5 = createHash('md5').update(buf).digest('hex');
+    step = 'md5';
+    const fileMd5 = await md5File(filePath);
     const fileName = displayName || basename(filePath);
 
     step = 'getRichMediaFilePathForGuild';
