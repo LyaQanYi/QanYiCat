@@ -15,7 +15,7 @@
  */
 
 import { createHash, randomBytes } from 'node:crypto';
-import { promises as fs, existsSync, statSync } from 'node:fs';
+import { promises as fs, existsSync, statSync, createReadStream } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -44,6 +44,17 @@ export interface StagedImage {
   sourcePath: string;
   picWidth: number;
   picHeight: number;
+}
+
+/** MD5 a file by streaming it, so large videos don't get slurped into memory. */
+function md5File(path: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = createHash('md5');
+    const stream = createReadStream(path);
+    stream.on('error', reject);
+    stream.on('data', (chunk) => hash.update(chunk));
+    stream.on('end', () => resolve(hash.digest('hex')));
+  });
 }
 
 /** Strip a `file://` prefix and decode the URL, so callers can pass either form. */
@@ -587,9 +598,10 @@ export async function stageVideoForSend(
     const fileSize = statSync(filePath).size;
     if (fileSize === 0) throw new Error(`video file is empty: ${filePath}`);
 
-    step = 'readFile';
-    const buf = await fs.readFile(filePath);
-    const videoMd5 = createHash('md5').update(buf).digest('hex');
+    // Stream the MD5 instead of slurping the whole file: videos can be 1 GB+,
+    // and the bytes are reused only via fs.copyFile below, not from a buffer.
+    step = 'md5';
+    const videoMd5 = await md5File(filePath);
     const fileName = basename(filePath);
 
     step = 'probeMp4Info';

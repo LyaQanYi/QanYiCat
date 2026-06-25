@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Hono } from 'hono';
 import { signJwt } from '../auth/jwt.js';
 import type { LoginRequestDto, LoginResponseDto } from '../../../shared/dto.js';
@@ -33,6 +33,13 @@ export function mountLoginRoutes(app: Hono, deps: LoginRoutesDeps): void {
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  // HMAC both inputs under a fresh per-call key, then compare the fixed-size
+  // digests. Hashing first means the comparison always runs over 32 bytes, so
+  // we never short-circuit on a length mismatch — that early return would leak
+  // the configured password's length through a timing oracle. The random key
+  // prevents an attacker from precomputing either digest.
+  const key = randomBytes(32);
+  const da = createHmac('sha256', key).update(a).digest();
+  const db = createHmac('sha256', key).update(b).digest();
+  return timingSafeEqual(da, db);
 }

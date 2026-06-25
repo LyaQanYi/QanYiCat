@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { serve, type ServerType } from '@hono/node-server';
 import type { InstanceContext, QanYiCatConfig, RingBufferLogTransport } from '@qanyicat/core';
@@ -132,5 +133,7 @@ export async function initWebUI(opts: WebUIServerOptions): Promise<WebUIServerHa
 }
 
 function randomSecret(): string {
-  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  // Must be a real CSPRNG: this secret signs the WebUI's JWTs, so anyone who
+  // can guess it can forge sessions. Matches webui-passkey.ts's randomBytes(32).
+  return randomBytes(32).toString('hex');
 }
