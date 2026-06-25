@@ -309,12 +309,35 @@ export async function bootInsideQQ(deps: BootDeps): Promise<BootResult> {
   const liveConfig: QanYiCatConfig['onebot'] = { ...onebotConfig };
   const applyOneBotConfig = async (next: QanYiCatConfig['onebot']): Promise<void> => {
     log(`OneBotManager reload: networks=${next.networks.length} OB11=${next.enable11} OB12=${next.enable12}`);
+    // Snapshot the last-good config to roll back to if the new one fails.
+    const prev: QanYiCatConfig['onebot'] = { ...liveConfig };
     try { await currentManager.stop(); }
     catch (e) { log(`OneBotManager.stop threw during reload: ${(e as Error).message}`); }
-    Object.assign(liveConfig, next);
-    currentManager = new OneBotManager(ctx, next);
-    await currentManager.start();
-    log('OneBotManager reload complete');
+    try {
+      currentManager = new OneBotManager(ctx, next);
+      await currentManager.start();
+      Object.assign(liveConfig, next); // commit only after a clean start
+      log('OneBotManager reload complete');
+    } catch (e) {
+      // New config failed to come up; restore the previous one so the bot
+      // doesn't stay offline. Adapters rebind the same ports, so the old set is
+      // already stopped — we can only recover by starting a fresh manager.
+      log(`OneBotManager reload failed (${(e as Error).message}); rolling back`);
+      try {
+        currentManager = new OneBotManager(ctx, prev);
+        await currentManager.start();
+        log('OneBotManager rollback complete');
+      } catch (rollbackErr) {
+        // Both failed — the bot is down. Keep the root cause (why the reload was
+        // rejected) front and center; attach it as `cause` too.
+        throw new Error(
+          `config reload failed (${(e as Error).message}); rollback to the ` +
+            `previous config also failed (${(rollbackErr as Error).message})`,
+          { cause: e }
+        );
+      }
+      throw e;
+    }
   };
 
   // Optional WebUI boot — gated on env vars so the bridge stays lean for users
