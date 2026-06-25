@@ -111,4 +111,23 @@ describe('WebUI /api/stream', () => {
     expect(logFrame).toBeTruthy();
     ws.close();
   });
+
+  it('delivers a log line sharing the previous batch\'s millisecond', async () => {
+    const { ws, messages } = await connect(`?token=${token}`);
+    await new Promise((r) => setTimeout(r, 30));
+    // Both lines carry the exact same timestamp but land in separate poll
+    // cycles. The old timestamp cursor (strict `>`) dropped the second one;
+    // the count cursor must deliver both.
+    const ts = new Date().toISOString();
+    ringBuffer.log({ level: 'info', message: 'same-ms-A', label: 'test', timestamp: ts }, () => undefined);
+    await new Promise((r) => setTimeout(r, 700));
+    ringBuffer.log({ level: 'info', message: 'same-ms-B', label: 'test', timestamp: ts }, () => undefined);
+    await new Promise((r) => setTimeout(r, 700));
+    const got = (messages as Array<{ type: string; line?: { message: string } }>)
+      .filter((m) => m.type === 'log')
+      .map((m) => m.line?.message);
+    expect(got).toContain('same-ms-A');
+    expect(got).toContain('same-ms-B');
+    ws.close();
+  });
 });

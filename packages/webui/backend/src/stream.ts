@@ -56,16 +56,21 @@ export function attachStreamServer(
 
   // Poll the ring buffer for new lines. Polling at 500ms keeps load trivial
   // for chatty bots while still feeling instant to a watching operator.
+  // Cursor is the monotonic seen-count, not a timestamp. Multiple lines can
+  // share a millisecond, so a timestamp cursor with a strict `>` silently drops
+  // any line landing in the same ms as the previous batch's last entry.
+  // `current - lastSeen` is exactly how many arrived since the last poll; cap it
+  // at what's still buffered (older lines may have rolled off the ring) and emit
+  // that many from the tail.
   let lastSeen = opts.logs?.totalSeen() ?? 0;
-  let lastTimestamp = Date.now();
   const pollTimer = opts.logs
     ? setInterval(() => {
         const current = opts.logs!.totalSeen();
         if (current === lastSeen) return;
-        const newLines = opts.logs!.since(lastTimestamp);
-        if (newLines.length > 0) {
-          lastTimestamp = newLines[newLines.length - 1]!.timestamp;
-          for (const line of newLines) broadcast({ type: 'log', line });
+        const snap = opts.logs!.snapshot();
+        const newCount = Math.min(current - lastSeen, snap.length);
+        for (const line of snap.slice(snap.length - newCount)) {
+          broadcast({ type: 'log', line });
         }
         lastSeen = current;
       }, 500)
