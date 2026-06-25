@@ -42,11 +42,15 @@ jobs:
       - name: pnpm typecheck
         run: pnpm typecheck
 
-      - name: pnpm test
-        run: pnpm test
-
+      # Build before test: the cross-package tests import workspace deps by name
+      # (e.g. @qanyicat/core), which resolve through package.json "exports" to
+      # dist/index.mjs. On a fresh checkout dist/ doesn't exist yet, so tests
+      # must run after the build produces it.
       - name: pnpm build
         run: pnpm build
+
+      - name: pnpm test
+        run: pnpm test
 
   rust:
     name: rust (injector test + build)
