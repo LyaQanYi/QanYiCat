@@ -11,15 +11,22 @@ import { QQBasicInfoProbe } from '../src/wrapper/qq-probe';
 describe('QQBasicInfoProbe.probe', () => {
   let root: string;
   let originalPath: string | undefined;
+  const originalPlatform = process.platform;
 
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), 'qyc-qq-'));
     originalPath = process.env['QANYICAT_WRAPPER_PATH'];
     delete process.env['QANYICAT_WRAPPER_PATH'];
+    // These fixtures model the Windows install layout (versions/<ver>/wrapper.node).
+    // The probe resolves resource paths from process.platform at call time, so pin
+    // it to win32 — otherwise on the Linux/macOS CI runners it takes the
+    // resources/app branch and never finds the fixture wrapper.node.
+    Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
   });
   afterEach(() => {
     rmSync(root, { recursive: true, force: true });
     if (originalPath !== undefined) process.env['QANYICAT_WRAPPER_PATH'] = originalPath;
+    Object.defineProperty(process, 'platform', { value: originalPlatform, configurable: true });
   });
 
   it('reads curVersion from versions/config.json (quick-update path)', () => {
