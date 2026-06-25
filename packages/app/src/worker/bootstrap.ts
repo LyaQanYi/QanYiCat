@@ -51,6 +51,9 @@ export async function runWorker(): Promise<void> {
   // manager on hot-reload; the shutdown hook reads this binding at call time.
   let onebot = new OneBotManager(ctx, config.onebot);
   await onebot.start();
+  // Last config the manager successfully started with — the rollback target if
+  // a later hot-reload fails to come up.
+  let activeOnebotCfg = config.onebot;
   registerShutdownHook(async () => {
     await onebot.stop();
   });
@@ -76,10 +79,19 @@ export async function runWorker(): Promise<void> {
       onebot.invokeAction(action, params, protocol ?? 'v11');
     opts.onConfigUpdate = async (next) => {
       // No in-place reconfigure on the manager, and adapters rebind the same
-      // ports, so we must stop the old set before starting the new one.
+      // ports, so we must stop the old set before starting the new one. If the
+      // new config fails to come up (e.g. a port is taken), roll back to the
+      // last-good config so the bot doesn't end up offline.
       await onebot.stop();
-      onebot = new OneBotManager(ctx, next);
-      await onebot.start();
+      try {
+        onebot = new OneBotManager(ctx, next);
+        await onebot.start();
+        activeOnebotCfg = next;
+      } catch (e) {
+        onebot = new OneBotManager(ctx, activeOnebotCfg);
+        await onebot.start();
+        throw e;
+      }
     };
     const ui = await mod.initWebUI(opts);
     registerShutdownHook(async () => {

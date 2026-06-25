@@ -224,6 +224,13 @@ describe('WebUI config edit routes', () => {
       body: JSON.stringify({ enable11: false }),
     });
     expect(r.status).toBe(500);
+    // The failed reload must not advance the in-memory config: a subsequent
+    // GET must still report the pre-edit state (enable11 still true).
+    const after = await fetch(`${url2}/api/config`, {
+      headers: { Authorization: `Bearer ${tok}` },
+    });
+    const cfg = (await after.json()) as { onebot: { enable11: boolean } };
+    expect(cfg.onebot.enable11).toBe(true);
     await failHandle.close();
   });
 });

@@ -242,9 +242,10 @@ async function applyAndRespond(
   opts: WebUIServerOptions,
   nextOnebot: QanYiCatConfig['onebot']
 ): Promise<Response> {
-  // Mutate in place so other route handlers (which captured `opts.config`)
-  // see the new state immediately. The bridge keeps the same object too.
-  opts.config.onebot = nextOnebot;
+  // Reload the live adapters first; only commit the in-memory config once the
+  // reload succeeds. If we mutated first and the callback threw (e.g. a port is
+  // already in use), GET /config would keep advertising a config the running
+  // adapters never accepted.
   if (opts.onConfigUpdate) {
     try {
       await opts.onConfigUpdate(nextOnebot);
@@ -252,6 +253,9 @@ async function applyAndRespond(
       return c.json({ error: 'reload_failed', detail: (e as Error).message }, 500);
     }
   }
+  // Mutate in place so other route handlers (which captured `opts.config`)
+  // see the new state immediately. The bridge keeps the same object too.
+  opts.config.onebot = nextOnebot;
   const resp: ConfigMutationResultDto = { ok: true, config: toSanitizedDto(opts.config) };
   return c.json(resp);
 }
