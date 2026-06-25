@@ -1,0 +1,14 @@
+[package]
+name = "qanyicat-hook"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+name = "qanyicat_hook"
+crate-type = ["cdylib"]
+
+[dependencies]
+windows.workspace = true
+retour = { version = "0.3", features = ["static-detour"] }

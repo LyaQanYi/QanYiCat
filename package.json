@@ -1,0 +1,34 @@
+{
+  "name": "qanyicat",
+  "version": "0.0.1",
+  "description": "QanYiCat — QQ NT protocol terminal with OneBot 11/12 dual stack",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present run build",
+    "build:app": "pnpm --filter @qanyicat/app run build",
+    "build:sdk": "pnpm --filter @qanyicat/sdk run build",
+    "build:webui": "pnpm --filter @qanyicat/webui run build",
+    "build:no-webui": "cross-env BUILD_WEBUI=0 pnpm --filter @qanyicat/app run build",
+    "dev": "pnpm --filter @qanyicat/app run dev",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "lint": "pnpm -r --if-present run lint",
+    "test": "pnpm -r --if-present run test",
+    "test:watch": "pnpm -r --if-present --parallel run test:watch",
+    "start": "node packages/app/dist/bin.mjs",
+    "smoke": "node tools/smoke/live-curl.mjs"
+  },
+  "devDependencies": {
+    "cross-env": "catalog:",
+    "typescript": "catalog:"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "ffmpeg-static"
+    ]
+  }
+}

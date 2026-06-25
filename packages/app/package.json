@@ -1,0 +1,29 @@
+{
+  "name": "@qanyicat/app",
+  "version": "0.0.1",
+  "description": "QanYiCat executable: CLI + multi-process shell + bootstrap",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "bin": {
+    "qanyicat": "./dist/bin.mjs"
+  },
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@qanyicat/core": "workspace:*",
+    "@qanyicat/onebot": "workspace:*",
+    "@qanyicat/protocol": "workspace:*",
+    "commander": "catalog:"
+  },
+  "devDependencies": {
+    "@qanyicat/webui-backend": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-dts": "catalog:"
+  }
+}

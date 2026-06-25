@@ -1,0 +1,6 @@
+﻿{
+  "group_id": "100001",
+  "message": [
+    { "type": "voice", "data": { "file": "C:/path/to/file.mp3" } }
+  ]
+}
